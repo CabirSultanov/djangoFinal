@@ -17,9 +17,6 @@ class User(AbstractUser):
     def can_manage_articles(self):
         return self.role in [self.Roles.ADMIN, self.Roles.SUPERADMIN]
 
-    def can_ban_users(self):
-        return self.role in [self.Roles.ADMIN, self.Roles.SUPERADMIN]
-
     def can_assign_admins(self):
         return self.role == self.Roles.SUPERADMIN
 

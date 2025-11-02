@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="flex justify-center mt-5">
+  <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-xl">
+
+    <h2 class="text-xl font-bold mb-2">
+      {% if a %}Edit Article{% else %}Create Article{% endif %}
+    </h2>
+
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <!-- Title -->
+      <label class="block font-medium mb-1 text-sm">Title</label>
+      <input
+        type="text"
+        name="title"
+        value="{{ a.title|default:'' }}"
+        class="w-full border rounded p-2 mb-3 text-sm"
+        placeholder="Enter article title"
+        required
+      >
+
+      <!-- Content -->
+      <label class="block font-medium mb-1 text-sm">Content</label>
+      <textarea
+        name="content"
+        rows="4"
+        class="w-full border rounded p-2 mb-3 text-sm"
+        placeholder="Write your article..."
+        required
+      >{{ a.content|default:'' }}</textarea>
+
+      <!-- Category -->
+      <label class="block font-medium mb-1 text-sm">Category</label>
+      <select name="category" class="w-full border rounded p-2 mb-3 text-sm" required>
+        <option value="">-- Select category --</option>
+        {% for c in categories %}
+        <option value="{{ c.id }}" {% if a.category.id == c.id %}selected{% endif %}>
+          {{ c.name }}
+        </option>
+        {% endfor %}
+      </select>
+
+      <!-- Image -->
+      <label class="block font-medium mb-1 text-sm">Image</label>
+      <input type="file" name="image" class="w-full mb-3 text-sm">
+
+      {% if a.image %}
+      <p class="text-xs text-gray-500 mb-1">Current image:</p>
+      <img src="{{ a.image.url }}" class="w-32 mb-3 rounded border">
+      {% endif %}
+
+      <button
+        class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
+        type="submit"
+      >
+        {% if a %}Save{% else %}Create{% endif %}
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

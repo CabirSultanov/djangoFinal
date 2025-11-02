@@ -1,67 +1,282 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Home — Habr Clone</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background: #f7f9fc; }
-    header {
-      display: flex; justify-content: space-between;
-      align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 10px;
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1e3a8a;
+      --bg: #f9fafb;
+      --text: #1f2937;
+      --border: #e5e7eb;
+      --radius: 10px;
+      --shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     }
-    .btn-login {
-      background: #007bff;
+
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Header */
+    header {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 32px; /* было 16px 40px — уменьшил высоту */
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    header h2 a {
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 700;
+      font-size: 20px; /* чуть меньше */
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    header h2 a::before {
+      content: "📰";
+      font-size: 18px;
+    }
+
+    .user-area a {
+      background: var(--primary);
       color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
+      padding: 5px 12px;
+      border-radius: var(--radius);
+      text-decoration: none;
+      font-size: 13px;
+      transition: background 0.2s;
+    }
+
+    .user-area a:hover { background: var(--primary-dark); }
+
+    /* Nav bar */
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 25px;
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 10px 32px; /* уменьшено */
+      position: sticky;
+      top: 50px; /* меньше, чтобы не было слишком высоко */
+      z-index: 9;
+    }
+
+    nav a, .dropdown-btn {
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 500;
       font-size: 14px;
-      transition: background 0.3s ease;
+      position: relative;
+      cursor: pointer;
+    }
+
+    nav a:hover, .dropdown-btn:hover { color: var(--primary); }
+
+    /* Dropdown */
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: white;
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      padding: 10px 0;
+      min-width: 180px;
+      z-index: 100;
+    }
+
+    .dropdown-content a {
+      color: var(--text);
+      padding: 8px 16px;
+      display: block;
+      font-size: 14px;
       text-decoration: none;
     }
-    .btn-login:hover {
-      background: #0056b3;
+
+    .dropdown-content a:hover {
+      background: #f3f4f6;
+      color: var(--primary);
     }
+
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+
+    /* Articles grid */
+    main {
+      padding: 30px 40px;
+      display: grid;
+      gap: 24px;
+    }
+
     .article {
-      border-bottom: 1px solid #ddd;
-      padding: 10px 0;
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
+
+    .article:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+    }
+
     .article img {
-      max-width: 250px;
-      border-radius: 10px;
+      width: 220px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 8px;
+      flex-shrink: 0;
     }
-    a { text-decoration: none; color: #007bff; }
-    a:hover { text-decoration: underline; }
+
+    .article-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .article-content h3 {
+      margin: 0 0 8px;
+      font-size: 21px;
+    }
+
+    .article-content h3 a {
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .article-content h3 a:hover { color: var(--primary); }
+
+    .meta {
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .meta span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .article-content p {
+      margin: 0 0 10px;
+      font-size: 15px;
+      color: #374151;
+      line-height: 1.6;
+    }
+
+    .read-more {
+      color: var(--primary);
+      font-weight: 600;
+      text-decoration: none;
+      margin-top: auto;
+      align-self: flex-start;
+    }
+
+    .read-more:hover {
+      text-decoration: underline;
+    }
+
+    footer {
+      text-align: center;
+      color: #9ca3af;
+      font-size: 13px;
+      padding: 25px 0 40px;
+    }
   </style>
 </head>
 <body>
   <header>
-    <h2><a href="/" style="text-decoration:none;color:black;">📰 Habr Clone</a></h2>
-    <div>
+    <h2><a href="/">Habr Clone</a></h2>
+    <div class="user-area">
       {% if user.is_authenticated %}
-        Hello, <strong>{{ user.username }}</strong> |
-        <a href="{% url 'logout' %}" class="btn-login" style="background:#dc3545;">Logout</a>
+        <span style="margin-right:10px;">Hi, <strong>{{ user.username }}</strong></span>
+        <a href="{% url 'logout' %}" style="background:#dc3545;">Logout</a>
       {% else %}
-        <a href="{% url 'login' %}" class="btn-login">Login</a>
+        <a href="{% url 'login' %}">Login</a>
       {% endif %}
     </div>
   </header>
 
-  <h1>All Articles</h1>
-
-  {% for a in articles %}
-    <div class="article">
-      {% if a.image %}
-        <img src="{{ a.image.url }}" alt="image">
-      {% endif %}
-      <h3>{{ a.title }}</h3>
-      <p><strong>Author:</strong> {{ a.author.username }}</p>
-      <p><strong>Category:</strong> {{ a.category.name }}</p>
-      <a href="{% url 'article_detail' a.pk %}">Read more</a>
+  <nav>
+    <a href="{% url 'feed_all' %}">All Articles</a>
+    <a href="{% url 'feed_popular' %}">Popular</a>
+    <div class="dropdown">
+      <span class="dropdown-btn">Categories ▾</span>
+      <div class="dropdown-content">
+        <a href="{% url 'feed_by_category' 'backend' %}">Backend</a>
+        <a href="{% url 'feed_by_category' 'frontend' %}">Frontend</a>
+        <a href="{% url 'feed_by_category' 'ai' %}">AI</a>
+        <a href="{% url 'feed_by_category' 'cyber-security' %}">Cyber Security</a>
+        <a href="{% url 'feed_by_category' 'cyber-sport' %}">Cyber Sport</a>
+        <a href="{% url 'feed_by_category' 'game-development' %}">Game Development</a>
+      </div>
     </div>
-  {% empty %}
-    <p>No published articles yet.</p>
-  {% endfor %}
+    <a href="{% url 'feed_authors' %}">Authors</a>
+    <a href="{% url 'feed_favorites' %}">Favorites</a>
+    {% if user.is_authenticated %}
+      <a href="{% url 'feed_my_articles' %}">My Articles</a>
+      {% if user.can_manage_articles %}
+        <a href="{% url 'moderation_queue' %}">Moderation</a>
+      {% endif %}
+      <a href="{% url 'article_create' %}">Add Article</a>
+    {% endif %}
+  </nav>
+
+  <main>
+    {% for a in articles %}
+      <div class="article">
+        {% if a.image %}
+          <img src="{{ a.image.url }}" alt="article image" />
+        {% endif %}
+        <div class="article-content">
+          <h3><a href="{% url 'article_detail' a.pk %}">{{ a.title }}</a></h3>
+          <div class="meta">
+            <span>👤 {{ a.author.username }}</span>
+            <span>🏷️ {{ a.category.name }}</span>
+            <span>⭐ {{ a.rating }}</span>
+            <span>📅 {{ a.created_at|date:"M d, Y" }}</span>
+          </div>
+          <p>{{ a.content|truncatechars:250 }}</p>
+          <a class="read-more" href="{% url 'article_detail' a.pk %}">Read more →</a>
+        </div>
+      </div>
+    {% empty %}
+      <p>No published articles yet.</p>
+    {% endfor %}
+  </main>
+
+  <footer>© {{ now|date:"Y" }} Habr Clone — All rights reserved.</footer>
 </body>
 </html>

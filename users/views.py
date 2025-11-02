@@ -2,9 +2,20 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import views as auth_views
 from .forms import CustomUserCreationForm
 
 User = get_user_model()
+
+
+# --- Custom Login (защита от возврата на /login для уже вошедших) ---
+class CustomLoginView(auth_views.LoginView):
+    template_name = 'users/login.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('/')  # уже вошёл — кидаем на главную
+        return super().dispatch(request, *args, **kwargs)
 
 
 # --- Регистрация ---
@@ -49,25 +60,5 @@ def promote_to_admin(request, user_id):
         user.role = User.Roles.ADMIN
         user.save()
         messages.success(request, f"{user.username} was successfully promoted to Admin!")
-
-    return redirect('user_list')
-
-
-# --- Забанить пользователя ---
-@login_required
-def ban_user(request, user_id):
-    if not request.user.can_ban_users():
-        messages.error(request, "Access denied — only Admin or Super Admin can ban users.")
-        return redirect('/')
-
-    user = get_object_or_404(User, id=user_id)
-
-    if user.is_banned:
-        user.is_banned = False
-        messages.success(request, f"{user.username} was unbanned.")
-    else:
-        user.is_banned = True
-        messages.warning(request, f"{user.username} was banned.")
-    user.save()
 
     return redirect('user_list')

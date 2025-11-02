@@ -5,17 +5,33 @@ from .models import User
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
-    # убрал 'is_superuser' 👇
-    list_display = ('username', 'email', 'role', 'is_banned', 'is_staff')
-    list_filter = ('role', 'is_banned', 'is_staff')
+    # колонки, которые видны в списке пользователей
+    list_display = ('username', 'email', 'display_role')
+    list_filter = ('role',)
     search_fields = ('username', 'email')
     ordering = ('username',)
 
-    fieldsets = UserAdmin.fieldsets + (
-        ('Additional Info', {'fields': ('role', 'is_banned')}),
+    # форма редактирования
+    fieldsets = (
+        (None, {'fields': ('username', 'email', 'password')}),
+        ('Permissions', {'fields': ('role',)}),
     )
 
-    actions = ['promote_to_admin', 'demote_to_user', 'ban_selected_users', 'unban_selected_users']
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('username', 'email', 'password1', 'password2', 'role'),
+        }),
+    )
+
+    actions = ['promote_to_admin', 'demote_to_user']
+
+    # показываем "Super Admin" для суперпользователей
+    def display_role(self, obj):
+        if obj.is_superuser:
+            return "Super Admin"
+        return obj.get_role_display()
+    display_role.short_description = "Role"
 
     @admin.action(description="Promote selected users to Admin")
     def promote_to_admin(self, request, queryset):
@@ -26,13 +42,3 @@ class CustomUserAdmin(UserAdmin):
     def demote_to_user(self, request, queryset):
         updated = queryset.update(role=User.Roles.USER, is_staff=False)
         self.message_user(request, f"{updated} user(s) demoted to User.", messages.INFO)
-
-    @admin.action(description="Ban selected users")
-    def ban_selected_users(self, request, queryset):
-        updated = queryset.update(is_banned=True)
-        self.message_user(request, f"{updated} user(s) banned.", messages.WARNING)
-
-    @admin.action(description="Unban selected users")
-    def unban_selected_users(self, request, queryset):
-        updated = queryset.update(is_banned=False)
-        self.message_user(request, f"{updated} user(s) unbanned.", messages.SUCCESS)
