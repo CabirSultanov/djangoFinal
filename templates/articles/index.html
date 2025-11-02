@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Home — Habr Clone</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f7f9fc; }
+    header {
+      display: flex; justify-content: space-between;
+      align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 10px;
+    }
+    .btn-login {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s ease;
+      text-decoration: none;
+    }
+    .btn-login:hover {
+      background: #0056b3;
+    }
+    .article {
+      border-bottom: 1px solid #ddd;
+      padding: 10px 0;
+    }
+    .article img {
+      max-width: 250px;
+      border-radius: 10px;
+    }
+    a { text-decoration: none; color: #007bff; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <header>
+    <h2><a href="/" style="text-decoration:none;color:black;">📰 Habr Clone</a></h2>
+    <div>
+      {% if user.is_authenticated %}
+        Hello, <strong>{{ user.username }}</strong> |
+        <a href="{% url 'logout' %}" class="btn-login" style="background:#dc3545;">Logout</a>
+      {% else %}
+        <a href="{% url 'login' %}" class="btn-login">Login</a>
+      {% endif %}
+    </div>
+  </header>
+
+  <h1>All Articles</h1>
+
+  {% for a in articles %}
+    <div class="article">
+      {% if a.image %}
+        <img src="{{ a.image.url }}" alt="image">
+      {% endif %}
+      <h3>{{ a.title }}</h3>
+      <p><strong>Author:</strong> {{ a.author.username }}</p>
+      <p><strong>Category:</strong> {{ a.category.name }}</p>
+      <a href="{% url 'article_detail' a.pk %}">Read more</a>
+    </div>
+  {% empty %}
+    <p>No published articles yet.</p>
+  {% endfor %}
+</body>
+</html>

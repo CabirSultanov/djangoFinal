@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Create account</title>
+  <style>
+    :root { --blue:#007bff; --green:#28a745; --red:#e63946; }
+    * { box-sizing: border-box; }
+    body{
+      margin:0; height:100vh; display:grid; place-items:center;
+      font-family:"Segoe UI", Arial, sans-serif; background:#f3f6fa;
+    }
+    .card{
+      width:420px; background:#fff; border-radius:16px;
+      padding:28px 32px; box-shadow:0 8px 25px rgba(0,0,0,.1);
+    }
+    h2{ margin:0 0 16px; text-align:center; color:#222; font-weight:600; }
+    .field{ margin-bottom:12px; }
+    label{ display:block; margin-bottom:6px; color:#333; font-weight:500; }
+    input{
+      width:100%; padding:10px; border:1px solid #ccc; border-radius:6px;
+      background:#f9fbfd; font-size:15px; transition:border-color .2s, background .2s;
+    }
+    input:focus{ outline:none; border-color:var(--green); background:#fff; }
+    .error-msg{
+      margin-top:6px; color:var(--red); font-size:12px; line-height:1.25;
+    }
+    .non-field{ margin:8px 0 14px; color:var(--red); font-size:13px; text-align:center; }
+    button{
+      width:100%; margin-top:6px; padding:10px; border:0; border-radius:6px;
+      color:#fff; cursor:pointer; font-size:15px;
+      background:linear-gradient(135deg, var(--green), #218838);
+      transition:transform .15s ease;
+    }
+    button:hover{ transform:translateY(-1px); }
+    p{ text-align:center; margin:16px 0 0; color:#444; font-size:14px; }
+    a{ color:var(--blue); text-decoration:none; font-weight:500; }
+    a:hover{ text-decoration:underline; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Create account</h2>
+
+    {# не-связанные с полями ошибки (редко, но пусть будут компактно) #}
+    {% if form.non_field_errors %}
+      <div class="non-field">
+        {% for e in form.non_field_errors %}<div>{{ e }}</div>{% endfor %}
+      </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <div class="field">
+        <label for="id_username">Username</label>
+        <input type="text" id="id_username" name="username"
+               value="{{ form.username.value|default:'' }}" required autocomplete="username" />
+        {% for e in form.username.errors %}
+          <div class="error-msg">{{ e }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="field">
+        <label for="id_email">Email</label>
+        <input type="email" id="id_email" name="email"
+               value="{{ form.email.value|default:'' }}" required autocomplete="email" />
+        {% for e in form.email.errors %}
+          <div class="error-msg">{{ e }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="field">
+        <label for="id_password1">Password</label>
+        <!-- по твоему требованию пароль видимый -->
+        <input type="text" id="id_password1" name="password1" required autocomplete="new-password" />
+        {% for e in form.password1.errors %}
+          <div class="error-msg">{{ e }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="field">
+        <label for="id_password2">Confirm password</label>
+        <input type="text" id="id_password2" name="password2" required autocomplete="new-password" />
+        {% for e in form.password2.errors %}
+          <div class="error-msg">{{ e }}</div>
+        {% endfor %}
+      </div>
+
+      <button type="submit">Register</button>
+    </form>
+
+    <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
+  </div>
+</body>
+</html>
