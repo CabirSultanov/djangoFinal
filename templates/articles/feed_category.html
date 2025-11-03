@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block page_title %}{{ category.name }} Articles{% endblock %}
+{% load static %}
+
+{% block content %}
+<main style="display:flex;justify-content:center;padding:30px 40px;">
+  <div style="max-width:1150px;width:100%;">
+    {% if articles %}
+      <div style="
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(500px,550px));
+        gap:24px;
+        justify-content:center;
+      ">
+        {% for a in articles %}
+          <div style="
+            background:white;
+            border-radius:10px;
+            box-shadow:0 2px 10px rgba(0,0,0,0.05);
+            padding:20px;
+            display:flex;
+            flex-direction:column;
+            gap:15px;
+            transition:transform 0.2s, box-shadow 0.2s;
+          ">
+            {% if a.image %}
+              <a href="{% url 'article_detail' a.pk %}">
+                <img src="{{ a.image.url }}" alt="{{ a.title }}" style="width:100%;height:200px;object-fit:cover;border-radius:8px;">
+              </a>
+            {% endif %}
+
+            <div>
+              <h3 style="margin:10px 0 6px;font-size:20px;">
+                <a href="{% url 'article_detail' a.pk %}" style="color:#1f2937;text-decoration:none;">{{ a.title }}</a>
+              </h3>
+
+              <div style="font-size:14px;color:#6b7280;margin-bottom:8px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
+                <span>👤 {{ a.author.username }}</span>
+                <span>🏷️ {{ a.category.name }}</span>
+                <span>⭐ {{ a.rating_percent|default:"0.0" }}%</span>
+                <span>📅 {{ a.created_at|date:"M d, Y" }}</span>
+              </div>
+
+              <p style="font-size:15px;color:#374151;line-height:1.6;margin:0 0 12px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;text-overflow:ellipsis;">
+                {{ a.content }}
+              </p>
+
+              <a href="{% url 'article_detail' a.pk %}" style="background:#2563eb;color:white;text-decoration:none;padding:8px 14px;border-radius:6px;font-weight:600;">
+                Read more
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="text-align:center;color:#6b7280;font-size:15px;">
+        No articles yet in this category.
+      </p>
+    {% endif %}
+  </div>
+</main>
+{% endblock %}

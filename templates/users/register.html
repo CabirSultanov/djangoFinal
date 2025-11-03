@@ -42,7 +42,6 @@
   <div class="card">
     <h2>Create account</h2>
 
-    {# не-связанные с полями ошибки (редко, но пусть будут компактно) #}
     {% if form.non_field_errors %}
       <div class="non-field">
         {% for e in form.non_field_errors %}<div>{{ e }}</div>{% endfor %}
@@ -72,7 +71,6 @@
 
       <div class="field">
         <label for="id_password1">Password</label>
-        <!-- по твоему требованию пароль видимый -->
         <input type="text" id="id_password1" name="password1" required autocomplete="new-password" />
         {% for e in form.password1.errors %}
           <div class="error-msg">{{ e }}</div>

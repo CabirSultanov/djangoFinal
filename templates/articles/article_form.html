@@ -12,7 +12,7 @@
     <form method="POST" enctype="multipart/form-data">
       {% csrf_token %}
 
-      <!-- Title -->
+
       <label class="block font-medium mb-1 text-sm">Title</label>
       <input
         type="text"
@@ -23,7 +23,7 @@
         required
       >
 
-      <!-- Content -->
+
       <label class="block font-medium mb-1 text-sm">Content</label>
       <textarea
         name="content"
@@ -33,7 +33,7 @@
         required
       >{{ a.content|default:'' }}</textarea>
 
-      <!-- Category -->
+
       <label class="block font-medium mb-1 text-sm">Category</label>
       <select name="category" class="w-full border rounded p-2 mb-3 text-sm" required>
         <option value="">-- Select category --</option>
@@ -44,7 +44,7 @@
         {% endfor %}
       </select>
 
-      <!-- Image -->
+
       <label class="block font-medium mb-1 text-sm">Image</label>
       <input type="file" name="image" class="w-full mb-3 text-sm">
 

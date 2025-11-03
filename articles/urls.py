@@ -8,6 +8,7 @@ urlpatterns = [
     path('authors/', views.feed_authors, name='feed_authors'),
     path('favorites/', views.feed_favorites, name='feed_favorites'),
     path('my/', views.feed_my_articles, name='feed_my_articles'),
+    path('category/<slug:slug>/', views.feed_by_category, name='feed_by_category'),
 
     path('moderation/', views.moderation_queue, name='moderation_queue'),
     path('moderation/<int:pk>/approve/', views.moderation_approve, name='moderation_approve'),
@@ -22,7 +23,9 @@ urlpatterns = [
     path('<int:pk>/bookmark/', views.article_bookmark_toggle, name='article_bookmark_toggle'),
     path('<int:pk>/rate/<int:value>/', views.article_rate, name='article_rate'),
     path('<int:pk>/confirm/', views.article_confirm, name='article_confirm'),
-path('articles/<int:pk>/edit/', views.article_update, name='article_update'),
+    path('articles/<int:pk>/edit/', views.article_update, name='article_update'),
+
+
 
 
 ]

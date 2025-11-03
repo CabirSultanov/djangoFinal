@@ -7,29 +7,53 @@ from django.views.decorators.http import require_POST
 from .models import Article, Category, LikeDislike, Bookmark, Rating
 
 
-# ======================= FEEDS =======================
+
 
 def feed_all(request):
-    """Show all published articles."""
+
     articles = Article.objects.filter(is_published=True).order_by('-created_at')
+
+    for article in articles:
+        likes = article.votes.filter(value=1).count()
+        dislikes = article.votes.filter(value=-1).count()
+        total = likes + dislikes
+        article.rating_percent = round((likes / total * 100), 1) if total > 0 else 0
+
     return render(request, 'articles/index.html', {'articles': articles})
 
 
+
 def feed_popular(request):
-    """Popular articles (rating >= 4)."""
-    articles = Article.objects.filter(is_published=True, rating__gte=4).order_by('-rating', '-created_at')
+
+    articles = Article.objects.filter(is_published=True).order_by('-rating', '-created_at')
+
+
+    for article in articles:
+        likes = article.votes.filter(value=1).count()
+        dislikes = article.votes.filter(value=-1).count()
+        total = likes + dislikes
+        article.rating_percent = round((likes / total * 100), 1) if total > 0 else 0
+
+    # сортируем именно по вычисленному проценту (если нужно)
+    articles = sorted(articles, key=lambda a: a.rating_percent, reverse=True)
+
     return render(request, 'articles/feed_popular.html', {'articles': articles})
 
 
+
 def feed_by_category(request, slug):
-    """Filter by category."""
     category = get_object_or_404(Category, slug=slug)
     articles = category.articles.filter(is_published=True).order_by('-created_at')
+    for article in articles:
+        likes = article.votes.filter(value=1).count()
+        dislikes = article.votes.filter(value=-1).count()
+        total = likes + dislikes
+        article.rating_percent = round((likes / total * 100), 1) if total > 0 else 0
     return render(request, 'articles/feed_category.html', {'category': category, 'articles': articles})
 
 
+
 def feed_authors(request):
-    """List of authors by number of articles."""
     from django.contrib.auth import get_user_model
     User = get_user_model()
     authors = (
@@ -43,22 +67,20 @@ def feed_authors(request):
 
 @login_required
 def feed_favorites(request):
-    """Favorite articles (bookmarked)."""
     articles = Article.objects.filter(bookmarks__user=request.user).order_by('-created_at')
     return render(request, 'articles/feed_favorites.html', {'articles': articles})
 
 
 @login_required
 def feed_my_articles(request):
-    """User's own articles."""
+
     articles = Article.objects.filter(author=request.user).order_by('-created_at')
     return render(request, 'articles/feed_my.html', {'articles': articles})
 
 
-# ======================= DETAIL =======================
+
 
 def article_detail(request, pk):
-    """View article."""
     article = get_object_or_404(Article, pk=pk)
     can_view = article.is_published or request.user.is_authenticated and (
         request.user == article.author or request.user.can_manage_articles()
@@ -68,6 +90,9 @@ def article_detail(request, pk):
 
     likes = article.votes.filter(value=1).count()
     dislikes = article.votes.filter(value=-1).count()
+    total = likes + dislikes
+    rating_percent = round((likes / total) * 100, 1) if total > 0 else 0
+
     is_bookmarked = False
     if request.user.is_authenticated:
         is_bookmarked = Bookmark.objects.filter(user=request.user, article=article).exists()
@@ -77,15 +102,15 @@ def article_detail(request, pk):
         'likes': likes,
         'dislikes': dislikes,
         'is_bookmarked': is_bookmarked,
-        'is_approved': article.is_published  # ✅ добавлено, чтобы показать “Successfully added”
+        'rating_percent': rating_percent,
+        'is_approved': article.is_published
     })
 
 
-# ======================= CRUD =======================
+
 
 @login_required
 def article_create(request):
-    """Create article."""
     if request.method == 'POST':
         title = request.POST.get('title')
         content = request.POST.get('content')
@@ -110,7 +135,6 @@ def article_create(request):
 
 @login_required
 def article_update(request, pk):
-    """Редактирование статьи (автор или админ)."""
     article = get_object_or_404(Article, pk=pk)
 
     if not (request.user.can_manage_articles() or request.user == article.author):
@@ -125,7 +149,6 @@ def article_update(request, pk):
         if image:
             article.image = image
 
-        # Если автор, то снова на модерацию
         if not request.user.can_manage_articles():
             article.is_published = False
 
@@ -137,10 +160,8 @@ def article_update(request, pk):
     return render(request, 'articles/article_form.html', {'a': article, 'categories': categories})
 
 
-
 @login_required
 def article_delete(request, pk):
-    """Delete article."""
     article = get_object_or_404(Article, pk=pk)
     if not (request.user.can_manage_articles() or request.user == article.author):
         return redirect('feed_all')
@@ -153,11 +174,10 @@ def article_delete(request, pk):
     return render(request, 'articles/article_confirm_delete.html', {'a': article})
 
 
-# ======================= INTERACTIONS (AJAX) =======================
 
 @login_required
+@require_POST
 def article_like(request, pk):
-    """Toggle like."""
     article = get_object_or_404(Article, pk=pk)
     existing_vote = LikeDislike.objects.filter(user=request.user, article=article).first()
 
@@ -168,12 +188,15 @@ def article_like(request, pk):
 
     likes = article.votes.filter(value=1).count()
     dislikes = article.votes.filter(value=-1).count()
-    return JsonResponse({'likes': likes, 'dislikes': dislikes})
+    total = likes + dislikes
+    rating_percent = round((likes / total) * 100, 1) if total > 0 else 0
+
+    return JsonResponse({'likes': likes, 'dislikes': dislikes, 'rating_percent': rating_percent})
 
 
 @login_required
+@require_POST
 def article_dislike(request, pk):
-    """Toggle dislike."""
     article = get_object_or_404(Article, pk=pk)
     existing_vote = LikeDislike.objects.filter(user=request.user, article=article).first()
 
@@ -184,27 +207,33 @@ def article_dislike(request, pk):
 
     likes = article.votes.filter(value=1).count()
     dislikes = article.votes.filter(value=-1).count()
-    return JsonResponse({'likes': likes, 'dislikes': dislikes})
+    total = likes + dislikes
+    rating_percent = round((likes / total) * 100, 1) if total > 0 else 0
+
+    return JsonResponse({'likes': likes, 'dislikes': dislikes, 'rating_percent': rating_percent})
 
 
 @login_required
 @require_POST
 def article_bookmark_toggle(request, pk):
-    """Add/remove bookmark (AJAX)."""
     article = get_object_or_404(Article, pk=pk)
     bm, created = Bookmark.objects.get_or_create(user=request.user, article=article)
+
     if not created:
         bm.delete()
         bookmarked = False
     else:
         bookmarked = True
+
+    if request.META.get('HTTP_REFERER', '').endswith('/favorites/'):
+        return redirect('feed_favorites')
+
     return JsonResponse({'bookmarked': bookmarked})
 
 
 @login_required
 @require_POST
 def article_rate(request, pk, value):
-    """Rate article (1–5 stars)."""
     article = get_object_or_404(Article, pk=pk)
     value = max(1, min(5, int(value)))
     Rating.objects.update_or_create(user=request.user, article=article, defaults={'value': value})
@@ -214,11 +243,9 @@ def article_rate(request, pk, value):
     return JsonResponse({'rating': article.rating})
 
 
-# ======================= MODERATION =======================
 
 @login_required
 def moderation_queue(request):
-    """Moderation queue (admin/superadmin)."""
     if not request.user.can_manage_articles():
         return redirect('feed_all')
     articles = Article.objects.filter(is_published=False).order_by('created_at')
@@ -227,7 +254,6 @@ def moderation_queue(request):
 
 @login_required
 def moderation_approve(request, pk):
-    """Approve article."""
     if not request.user.can_manage_articles():
         return redirect('feed_all')
     article = get_object_or_404(Article, pk=pk)
@@ -239,7 +265,6 @@ def moderation_approve(request, pk):
 
 @login_required
 def article_confirm(request, pk):
-    """Send article for moderation."""
     article = get_object_or_404(Article, pk=pk, author=request.user)
     article.is_published = False
     article.save(update_fields=['is_published'])

@@ -1,9 +1,7 @@
 from django.contrib import admin, messages
-from django.contrib.auth.models import Group  # ← чтобы скрыть Groups
+from django.contrib.auth.models import Group
 from .models import Category, Article
 
-
-# ✅ Убираем стандартную модель Groups из админки
 admin.site.unregister(Group)
 
 
@@ -15,13 +13,22 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
-    list_display = ('title', 'author', 'category', 'is_published', 'rating', 'created_at')
+    list_display = ('title', 'author', 'category', 'is_published', 'rating_percent_display', 'created_at')
     list_filter = ('category', 'is_published', 'created_at')
     search_fields = ('title', 'content')
     ordering = ('-created_at',)
 
-    # ✅ Экшены для модерации
     actions = ['approve_articles', 'unpublish_articles']
+
+
+    @admin.display(description="Like Rating %")
+    def rating_percent_display(self, obj):
+        likes = obj.votes.filter(value=1).count()
+        dislikes = obj.votes.filter(value=-1).count()
+        total = likes + dislikes
+        if total == 0:
+            return "0%"
+        return f"{round((likes / total) * 100, 1)}%"
 
     @admin.action(description="✅ Approve selected articles (publish)")
     def approve_articles(self, request, queryset):

@@ -4,7 +4,6 @@
 {% block content %}
 <div class="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6 mt-6">
 
-  <!-- Header -->
   <div class="flex justify-between items-center mb-3">
     <h1 class="text-2xl font-bold text-gray-900">{{ a.title }}</h1>
     <p class="text-sm text-gray-500">Created: {{ a.created_at|date:"M d, Y" }}</p>
@@ -15,64 +14,68 @@
     <span><strong>Category:</strong> {{ a.category.name }}</span>
   </div>
 
-  <!-- Image -->
   {% if a.image %}
   <img src="{{ a.image.url }}" alt="Article image" class="w-full max-h-80 object-cover mb-3">
   {% endif %}
 
-  <!-- Content -->
+
   <div class="text-gray-800 leading-relaxed whitespace-pre-wrap break-words mb-5 mt-1">
     {{ a.content }}
   </div>
 
-  <!-- Interactions -->
+
   {% if user.is_authenticated %}
   <div class="flex items-center gap-6 mb-4">
 
-    <!-- Like -->
+
     <button id="likeBtn" data-url="{% url 'article_like' a.id %}" class="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition">
       👍 <span id="likeCount">{{ likes }}</span>
     </button>
 
-    <!-- Dislike -->
+
     <button id="dislikeBtn" data-url="{% url 'article_dislike' a.id %}" class="flex items-center gap-2 text-gray-600 hover:text-red-600 transition">
       👎 <span id="dislikeCount">{{ dislikes }}</span>
     </button>
 
-    <!-- Bookmark -->
+
     <button id="bookmarkBtn" data-url="{% url 'article_bookmark_toggle' a.id %}" class="flex items-center gap-2 transition {% if is_bookmarked %}text-yellow-500{% else %}text-gray-600{% endif %}">
       ⭐ <span id="bookmarkText">{% if is_bookmarked %}Saved{% else %}Save{% endif %}</span>
     </button>
   </div>
 
+
+  <div class="mb-6">
+    <p class="text-gray-700 text-sm mb-1">Rating: <span id="ratingPercent">{{ rating_percent }}</span>%</p>
+    <div class="w-full bg-gray-200 h-3 rounded-full overflow-hidden">
+      <div id="ratingBar" class="h-3 bg-green-500" style="width: {{ rating_percent }}%; transition: width 0.3s;"></div>
+    </div>
+  </div>
+
   {% if user == a.author %}
-  {% if not a.is_published %}
-    <button id="confirmBtn"
-            data-url="{% url 'article_confirm' a.id %}"
-            class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition mt-4">
-      Confirm
-    </button>
-  {% else %}
-    <span class="text-green-600 font-semibold mt-4 block">
-      ✅ Successfully added
-    </span>
+    {% if not a.is_published %}
+      <button id="confirmBtn"
+              data-url="{% url 'article_confirm' a.id %}"
+              class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition mt-4">
+        Confirm
+      </button>
+    {% else %}
+      <span class="text-green-600 font-semibold mt-4 block">
+        Successfully added
+      </span>
+    {% endif %}
+
+    <a href="{% url 'article_update' a.id %}"
+       class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition mt-4 inline-block">
+      ✏Edit Article
+    </a>
   {% endif %}
-{% endif %}
-    {% if user == a.author %}
-  <a href="{% url 'article_update' a.id %}"
-     class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition mt-4 inline-block">
-    ✏️ Edit Article
-  </a>
-{% endif %}
-
-
 
   {% else %}
   <p class="text-gray-500 italic mt-4">Login to like, dislike or bookmark this article.</p>
   {% endif %}
 </div>
 
-<!-- AJAX logic -->
+
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -80,33 +83,29 @@ document.addEventListener("DOMContentLoaded", () => {
   const dislikeBtn = document.getElementById("dislikeBtn");
   const bookmarkBtn = document.getElementById("bookmarkBtn");
   const confirmBtn = document.getElementById("confirmBtn");
+  const ratingPercent = document.getElementById("ratingPercent");
+  const ratingBar = document.getElementById("ratingBar");
+
+  async function handleAction(btn, type) {
+    const res = await fetch(btn.dataset.url, {
+      method: "POST",
+      headers: {"X-CSRFToken": getCookie("csrftoken")}
+    });
+    const data = await res.json();
+    document.getElementById("likeCount").textContent = data.likes;
+    document.getElementById("dislikeCount").textContent = data.dislikes;
+    if (data.rating_percent !== undefined) {
+      ratingPercent.textContent = data.rating_percent;
+      ratingBar.style.width = data.rating_percent + "%";
+    }
+  }
 
   if (likeBtn) {
-    likeBtn.addEventListener("click", async () => {
-      const res = await fetch(likeBtn.dataset.url, {
-        method: "POST",
-        headers: {"X-CSRFToken": getCookie("csrftoken")}
-      });
-      const data = await res.json();
-      document.getElementById("likeCount").textContent = data.likes;
-      document.getElementById("dislikeCount").textContent = data.dislikes;
-      likeBtn.classList.add("text-blue-600");
-      dislikeBtn.classList.remove("text-red-600");
-    });
+    likeBtn.addEventListener("click", () => handleAction(likeBtn, "like"));
   }
 
   if (dislikeBtn) {
-    dislikeBtn.addEventListener("click", async () => {
-      const res = await fetch(dislikeBtn.dataset.url, {
-        method: "POST",
-        headers: {"X-CSRFToken": getCookie("csrftoken")}
-      });
-      const data = await res.json();
-      document.getElementById("likeCount").textContent = data.likes;
-      document.getElementById("dislikeCount").textContent = data.dislikes;
-      dislikeBtn.classList.add("text-red-600");
-      likeBtn.classList.remove("text-blue-600");
-    });
+    dislikeBtn.addEventListener("click", () => handleAction(dislikeBtn, "dislike"));
   }
 
   if (bookmarkBtn) {

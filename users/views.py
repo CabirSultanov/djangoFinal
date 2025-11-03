@@ -8,17 +8,16 @@ from .forms import CustomUserCreationForm
 User = get_user_model()
 
 
-# --- Custom Login (защита от возврата на /login для уже вошедших) ---
 class CustomLoginView(auth_views.LoginView):
     template_name = 'users/login.html'
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            return redirect('/')  # уже вошёл — кидаем на главную
+            return redirect('/')
         return super().dispatch(request, *args, **kwargs)
 
 
-# --- Регистрация ---
+
 def register(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
@@ -35,7 +34,7 @@ def register(request):
     return render(request, 'users/register.html', {'form': form})
 
 
-# --- Просмотр всех пользователей (только Super Admin видит всех) ---
+
 @login_required
 def user_list(request):
     if not request.user.can_assign_admins():
@@ -45,7 +44,7 @@ def user_list(request):
     return render(request, 'users/user_list.html', {'users': users})
 
 
-# --- Назначить роль 'Admin' ---
+
 @login_required
 def promote_to_admin(request, user_id):
     if not request.user.can_assign_admins():

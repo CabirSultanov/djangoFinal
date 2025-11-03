@@ -5,13 +5,11 @@ from .models import User
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
-    # колонки, которые видны в списке пользователей
     list_display = ('username', 'email', 'display_role')
     list_filter = ('role',)
     search_fields = ('username', 'email')
     ordering = ('username',)
 
-    # форма редактирования
     fieldsets = (
         (None, {'fields': ('username', 'email', 'password')}),
         ('Permissions', {'fields': ('role',)}),
@@ -26,7 +24,7 @@ class CustomUserAdmin(UserAdmin):
 
     actions = ['promote_to_admin', 'demote_to_user']
 
-    # показываем "Super Admin" для суперпользователей
+
     def display_role(self, obj):
         if obj.is_superuser:
             return "Super Admin"
